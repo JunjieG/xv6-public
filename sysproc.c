@@ -7,67 +7,62 @@
 #include "mmu.h"
 #include "proc.h"
 
-int
-sys_fork(void)
+int sys_fork(void)
 {
   return fork();
 }
 
-int
-sys_exit(void)
+int sys_exit(void)
 {
   exit();
-  return 0;  // not reached
+  return 0; // not reached
 }
 
-int
-sys_wait(void)
+int sys_wait(void)
 {
   return wait();
 }
 
-int
-sys_kill(void)
+int sys_kill(void)
 {
   int pid;
 
-  if(argint(0, &pid) < 0)
+  if (argint(0, &pid) < 0)
     return -1;
   return kill(pid);
 }
 
-int
-sys_getpid(void)
+int sys_getpid(void)
 {
   return proc->pid;
 }
 
-int
-sys_sbrk(void)
+int sys_sbrk(void)
 {
   int addr;
   int n;
 
-  if(argint(0, &n) < 0)
+  if (argint(0, &n) < 0)
     return -1;
   addr = proc->sz;
-  if(growproc(n) < 0)
+  if (growproc(n) < 0)
     return -1;
   return addr;
 }
 
-int
-sys_sleep(void)
+int sys_sleep(void)
 {
   int n;
   uint ticks0;
-  
-  if(argint(0, &n) < 0)
+
+  if (argint(0, &n) < 0)
     return -1;
   acquire(&tickslock);
   ticks0 = ticks;
-  while(ticks - ticks0 < n){
-    if(proc->killed){
+  while (ticks - ticks0 < n)
+  {
+    if (proc->killed)
+    {
       release(&tickslock);
       return -1;
     }
@@ -79,13 +74,34 @@ sys_sleep(void)
 
 // return how many clock tick interrupts have occurred
 // since start.
-int
-sys_uptime(void)
+int sys_uptime(void)
 {
   uint xticks;
-  
+
   acquire(&tickslock);
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+/////////////
+// HW3 Pt1 //
+/////////////
+int sys_wait_stat(void)
+{
+  int *wtime;
+  int *rtime;
+  int *iotime;
+  int *status;
+
+  if (argptr(0, (void *)&wtime, sizeof(wtime)) < 0)
+    return -1;
+  if (argptr(1, (void *)&rtime, sizeof(rtime)) < 0)
+    return -1;
+  if (argptr(2, (void *)&iotime, sizeof(iotime)) < 0)
+    return -1;
+  if (argptr(3, (void *)&status, sizeof(status)) < 0)
+    return -1;
+
+  return wait_stat(wtime, rtime, iotime, status);
 }
